@@ -14,6 +14,7 @@
 //data
 
 struct editorConfig {
+  int cx, cy;
   int screenrows;
   int screencols;
   struct termios orig_termios;
@@ -141,8 +142,12 @@ void editorRefreshScreen() {
   abAppend(&ab,"\x1b[H",3);
   
   editorDrawRows(&ab);
-  abAppend(&ab,"\x1b[H",3);
- abAppend(&ab, "\x1b[?25h", 6);
+  
+  char buf[32];
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+  abAppend(&ab, buf, strlen(buf));
+
+  abAppend(&ab, "\x1b[?25h", 6);
   write(STDOUT_FILENO, ab.b, ab.len);
   abFree(&ab);
 }
@@ -161,6 +166,8 @@ void editorProcessKeypress() {
 
 //init
 void initEditor() {
+  E.cx = 0;
+  E.cy = 0;
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
 }
 
@@ -170,6 +177,7 @@ int main(){
     while (1){
       editorRefreshScreen();
       editorProcessKeypress();
+    
     }
     return 0;
 }
